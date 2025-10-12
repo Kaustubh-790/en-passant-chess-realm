@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import User from "../models/User.js"; // Adjust path if needed
+import User from "../models/User.js";
 
 const MONGO_URI = "mongodb://localhost:27017/En-passant";
 

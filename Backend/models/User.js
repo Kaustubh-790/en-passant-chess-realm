@@ -61,9 +61,14 @@ const userSchema = new mongoose.Schema({
 
   title: { type: String, default: "Novice" }, // Club title or rank
   achievements: [String], // Achievement IDs / tags
-  profilePicture: String,
+  profilePicture: {
+    type: String,
+    required: false,
+    default: "https://i.ibb.co/pvTYyRcm/default-Profile.webp", // default profile picture, in case image is not extracted from firebase login/signup
+  },
   bio: { type: String, maxlength: 300 },
 
+  isOnboardingComplete: { type: Boolean, default: false }, // Flag to check if onboarding is complete
   createdAt: { type: Date, default: Date.now },
 });
 

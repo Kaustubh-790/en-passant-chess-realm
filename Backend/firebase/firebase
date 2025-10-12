@@ -1,0 +1,22 @@
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBcFVnfr98VxbyKVqStwrFIjgBf-YzmT4U",
+  authDomain: "en-passant-chess-realm.firebaseapp.com",
+  projectId: "en-passant-chess-realm",
+  storageBucket: "en-passant-chess-realm.firebasestorage.app",
+  messagingSenderId: "1006894745379",
+  appId: "1:1006894745379:web:210d7e8859a4a65c2b6e96",
+  measurementId: "G-ZFHLBNZB0R"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
