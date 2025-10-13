@@ -40,15 +40,12 @@ const userSchema = new mongoose.Schema({
   branch: { type: String, required: true }, // e.g., CSE, CSE-DS, etc.
   year: { type: Number, required: true, min: 1, max: 5 }, // 5th for super-seniors
 
-  role: {
-    type: String,
-    enum: ["knight", "champion", "wizard", "admin"],
-    default: "knight",
-  },
-
-  coins: { type: Number, default: 0 }, // Personal treasury
+  // Coin system
+  coins: { type: Number, default: 100 }, // Personal treasury, 100 coins bonus on signup
   totalCoinsEarned: { type: Number, default: 0 }, // Lifetime coins earned
   treasuryDebt: { type: Number, default: 0 }, // Royal treasury debt
+
+  // Chess accounts
   chessAccounts: { type: chessAccountsSchema, default: {} }, // Linked chess accounts
 
   // Unified rating across platforms calculated by the algorithm
@@ -59,7 +56,7 @@ const userSchema = new mongoose.Schema({
     lastCalculated: { type: Date, default: Date.now },
   },
 
-  title: { type: String, default: "Novice" }, // Club title or rank
+  title: { type: String, default: "Pawn" }, // Club title or rank
   achievements: [String], // Achievement IDs / tags
   profilePicture: {
     type: String,
