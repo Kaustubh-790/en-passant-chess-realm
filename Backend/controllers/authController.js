@@ -36,14 +36,16 @@ const storeRefreshToken = async (userId, token) => {
   }
 };
 
-export const googleSignIn = async(req, res)=>{
-    try{
-        const{idToken} = req.body;
+export const googleSignIn = async (req, res) => {
+  try {
+    const { idToken } = req.body;
 
-        // verifying the firebase id token
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const { uid, email, name } = decodedToken;
+    // verifying the firebase id token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { uid, email, name } = decodedToken;
 
-        // check if user exists in db
-    }
-}
+    // check if user exists in db
+  } catch (err) {
+    console.error(err);
+  }
+};
