@@ -1,16 +1,16 @@
 import admin from "../config/firebase.js";
 import User from "../models/User.js";
 import jwt, { decode } from "jsonwebtoken";
-import bcrypt from "bcrypt.js";
+import bcrypt from "bcrypt";
 import RefreshToken from "../models/RefreshToken.js";
 
 // Generate access token
-const generateAccessToken = (user) => {
+const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "15m" }); // 15 minutes
 };
 
 // Generate refresh token
-const generateRefreshToken = async (user) => {
+const generateRefreshToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: "7d", // 7 days
   });
@@ -38,7 +38,7 @@ const storeRefreshToken = async (userId, token) => {
 
 export const googleSignIn = async (req, res) => {
   try {
-    const { idToken, additionalData } = req.body;
+    const { idToken } = req.body;
 
     // verifying the firebase id token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -49,16 +49,6 @@ export const googleSignIn = async (req, res) => {
 
     if (!user) {
       // New user registration
-      const { branch, year } = additionalData;
-
-      // additional field validation
-      if (!branch || !year) {
-        return res.status(400).json({
-          success: false,
-          message: "Branch and Year are required for new users",
-        });
-      }
-
       // check if email already exists
       const existingUser = await User.findOne({ email: email });
       if (existingUser) {
@@ -73,8 +63,10 @@ export const googleSignIn = async (req, res) => {
         fireBaseUID: uid,
         username: name,
         email,
-        branch,
-        year,
+        collegeMail: "dummyMail@abes.ac.in", // some freshers may not have mail so assigning dummy mail(since its a required field) that can be updated later
+        branch: "CSE", // default feild as google login is used and branch and year are not fetched from google
+        year: 1, // default feild as google login is used and branch and year are not fetched from google
+        coins: 100, // signup bonus
       });
     }
 
@@ -82,8 +74,8 @@ export const googleSignIn = async (req, res) => {
     await user.save();
 
     // generate access tokens
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const accessToken = await generateAccessToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
 
     // store hashed refresh token in db
     await storeRefreshToken(user._id, refreshToken);
@@ -100,9 +92,9 @@ export const googleSignIn = async (req, res) => {
           id: user._id,
           username: user.username,
           email: user.email,
+          collegeMail: user.collegeMail,
           branch: user.branch,
           year: user.year,
-          role: user.role,
           coins: user.coins,
           profilePicture: user.profilePicture,
         },
@@ -121,7 +113,7 @@ export const googleSignIn = async (req, res) => {
 
 export const refreshAccessToken = async (req, res) => {
   try {
-    const { RefreshToken } = req.body;
+    const { refreshToken } = req.body;
     if (!refreshToken) {
       return res.status(401).json({
         success: false,
@@ -136,11 +128,19 @@ export const refreshAccessToken = async (req, res) => {
     );
 
     // Check if refresh token exists in database
-    const storedToken = await RefreshToken.findOne({
-      token: refreshToken,
+    const storedTokens = await RefreshToken.find({
       userId: decodedToken.userId,
       expiresAt: { $gt: new Date() },
     });
+
+    let storedToken = null;
+    for (const token of storedTokens) {
+      const isValid = await bcrypt.compare(refreshToken, token.token);
+      if (isValid) {
+        storedToken = token;
+        break;
+      }
+    }
 
     if (!storedToken) {
       return res.status(401).json({
@@ -150,12 +150,13 @@ export const refreshAccessToken = async (req, res) => {
     }
 
     // generate new access token
-    const newAccessToken = generateAccessToken(decodedToken.userId);
-    const newRefreshToken = generateRefreshToken(decodedToken.userId);
+    const newAccessToken = await generateAccessToken(decodedToken.userId);
+    const newRefreshToken = await generateRefreshToken(decodedToken.userId);
 
     // store new refresh token
     await storeRefreshToken(decodedToken.userId, newRefreshToken);
-    await RefreshToken.deleteOne({ _id: storedToken._id }); // delete old refresh token
+    // delete old refresh token
+    await RefreshToken.deleteOne({ _id: storedToken._id });
 
     res.status(200).json({
       success: true,
@@ -176,10 +177,35 @@ export const logout = async (req, res) => {
     const { refreshToken } = req.body;
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token required" });
-    } else {
-      // delete refresh token from db
-      await RefreshToken.deleteOne({ token: refreshToken });
     }
+
+    // Verify refresh token to obtain userId
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid refresh token" });
+    }
+
+    const userId = decoded.userId;
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid token payload" });
+    }
+
+    // delete matching refresh token from db
+    const storedTokens = await RefreshToken.find({ userId });
+    for (const token of storedTokens) {
+      const isValid = await bcrypt.compare(refreshToken, token.token);
+      if (isValid) {
+        await RefreshToken.deleteOne({ _id: token._id });
+        break;
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: "Logged out successfully",

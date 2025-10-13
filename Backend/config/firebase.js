@@ -2,7 +2,7 @@ import admin from "firebase-admin";
 import { readFileSync } from "fs";
 
 const serviceAccount = JSON.parse(
-  readFileSync("./config/en-passant-chess", "utf8")
+  readFileSync("./config/serviceAccountKey.json", "utf8")
 );
 
 admin.initializeApp({
@@ -10,3 +10,5 @@ admin.initializeApp({
 });
 
 export default admin;
+
+
