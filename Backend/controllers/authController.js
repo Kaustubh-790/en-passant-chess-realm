@@ -3,6 +3,21 @@ import User from "../models/User.js";
 import jwt, { decode } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import RefreshToken from "../models/RefreshToken.js";
+import { randomBytes } from "crypto";
+
+const generateUniqueCollegeMail = async () => {
+  let isUnique = false;
+  let uniqueMail = "";
+  while (!isUnique) {
+    const randomString = randomBytes(8).toString("hex");
+    uniqueMail = `dummy_${randomString}@abes.ac.in`;
+    const existingUser = await User.findOne({ collegeMail: uniqueMail });
+    if (!existingUser) {
+      isUnique = true;
+    }
+  }
+  return uniqueMail;
+};
 
 // Generate access token
 const generateAccessToken = (userId) => {
@@ -63,7 +78,7 @@ export const googleSignIn = async (req, res) => {
         fireBaseUID: uid,
         username: name,
         email,
-        collegeMail: "dummyMail@abes.ac.in", // some freshers may not have mail so assigning dummy mail(since its a required field) that can be updated later
+        collegeMail: await generateUniqueCollegeMail(), // some freshers may not have mail so assigning dummy mail(since its a required field) that can be updated later
         branch: "CSE", // default feild as google login is used and branch and year are not fetched from google
         year: 1, // default feild as google login is used and branch and year are not fetched from google
         coins: 100, // signup bonus
