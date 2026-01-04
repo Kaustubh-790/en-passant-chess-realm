@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import cors from "cors";
-import ratingRoutes from "./routes/ratingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
@@ -32,7 +31,6 @@ app.get("/", (req, res) => {
   res.send("Server is running.");
 });
 
-app.use("/api/ratings", ratingRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("*", (req, res) => {
