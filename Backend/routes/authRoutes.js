@@ -1,4 +1,3 @@
-// routes/authRoutes.js
 import express from "express";
 import {
   googleSignIn,
@@ -6,10 +5,10 @@ import {
   logout,
 } from "../controllers/authController.js";
 import { authenticate } from "../middleware/authMiddleware.js";
+import { admin } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-// Public routes
 router.post("/google-signin", googleSignIn);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/logout", logout);

@@ -66,6 +66,7 @@ const userSchema = new mongoose.Schema({
   bio: { type: String, maxlength: 300 },
 
   isOnboardingComplete: { type: Boolean, default: false }, // Flag to check if onboarding is complete
+  role: { type: String, enum: ["user", "admin"], default: "user" },
   createdAt: { type: Date, default: Date.now },
 });
 
