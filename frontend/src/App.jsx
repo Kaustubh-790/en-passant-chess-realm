@@ -3,6 +3,7 @@ import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "./firebase.js";
 import axios from "axios";
 import "./App.css";
+import api from "./api/apiClient.js";
 
 const API_URL = "http://localhost:5000/api/auth";
 
@@ -97,9 +98,32 @@ function App() {
     }
   };
 
+  const downloadExcel = async () => {
+    try {
+      const response = await api.get("/admin/export-users", {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Users_Export.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
   return (
     <div className="container">
       <h1>User Authentication</h1>
+
+      <h1>report download check</h1>
+      <button onClick={downloadExcel} className="button">
+        Download User Report
+      </button>
 
       {!user ? (
         <div className="card">
